@@ -36,13 +36,6 @@ def clima():
     )
     option_2023.click()
 
-    # Esperar a que el selector de mes esté disponible
-    month_selector = WebDriverWait(navegador, 10).until(
-        EC.presence_of_element_located((By.CSS_SELECTOR, "select[aria-label='Selector de mes del calendario']"))
-    )
-
-    # Seleccionar el mes de marzo (value="2")
-    month_selector.find_element(By.CSS_SELECTOR, "option[value='2']").click()
 
     navegador.quit()
 
