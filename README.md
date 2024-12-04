@@ -59,11 +59,6 @@ def clima():
             EC.presence_of_element_located((By.ID, "yearSelection"))
         )
 
-        # Seleccionar el año 2024
-        year_2024_option = year_selector.find_element(By.XPATH, "//option[text()='2024']")
-        year_2024_option.click()
-        time.sleep(2)
-
         # Seleccionar el año 2023
         year_2023_option = year_selector.find_element(By.XPATH, "//option[text()='2023']")
         year_2023_option.click()
