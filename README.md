@@ -8,15 +8,23 @@ from selenium.webdriver.support import expected_conditions as EC
 from webdriver_manager.chrome import ChromeDriverManager
 from bs4 import BeautifulSoup
 import pandas as pd
-datos_climaticos=[]
-def crear_csv(fecha, temp_max, temp_min, condicion, temporada):
+
+datos_climaticos = []
+
+# Diccionario para mapear números de mes a nombres de mes
+meses = {
+    '1': 'January', '2': 'February', '3': 'March', '4': 'April', '5': 'May', '6': 'June',
+    '7': 'July', '8': 'August', '9': 'September', '10': 'October', '11': 'November', '12': 'December'
+}
+
+
+def crear_csv(fecha, temp_max, temp_min, condicion):
     # Guardar los datos en la lista
     datos_climaticos.append({
         'Fecha': fecha,
         'Temperatura Máxima': temp_max,
         'Temperatura Mínima': temp_min,
         'Condición Climática': condicion,
-        'Temporada': temporada
     })
 
     # Convertir la lista a un DataFrame de pandas
@@ -24,6 +32,7 @@ def crear_csv(fecha, temp_max, temp_min, condicion, temporada):
 
     # Escribir el DataFrame en un archivo CSV (sin índice)
     df.to_csv('datos_climaticos/clima_tijuana.csv', index=False, mode='w', encoding='utf-8')
+
 def clima():
     # Configurar el driver de Chrome
     driver = ChromeDriverManager().install()
@@ -35,13 +44,11 @@ def clima():
     try:
         # Navegar a la página web
         navegador.get("https://www.wunderground.com/")
-        time.sleep(15)
-
-        WebDriverWait(navegador, 10).until(
+        WebDriverWait(navegador, 15).until(
             EC.presence_of_element_located((By.XPATH, "//a[contains(text(), 'Full Forecast')]"))
         ).click()
 
-        # Esperar a que el botón "CALENDAR" esté presente y hacer clic
+        # Navegar al calendario
         calendar_button = WebDriverWait(navegador, 15).until(
             EC.presence_of_element_located((By.XPATH, "//a/span[contains(text(), 'Calendar')]"))
         )
@@ -55,76 +62,74 @@ def clima():
         # Seleccionar el año 2024
         year_2024_option = year_selector.find_element(By.XPATH, "//option[text()='2024']")
         year_2024_option.click()
-
-        # Esperar un momento para cargar los datos del año 2024
         time.sleep(2)
 
         # Seleccionar el año 2023
         year_2023_option = year_selector.find_element(By.XPATH, "//option[text()='2023']")
         year_2023_option.click()
-
-        # Esperar un momento para cargar los datos del año 2023
         time.sleep(2)
 
         # Esperar a que el botón "View" esté presente y hacer clic
         view_button = WebDriverWait(navegador, 15).until(
             EC.presence_of_element_located((By.XPATH, "//input[@value='View' and @id='dateSubmit']"))
         )
-        view_button.click()  # Hacer clic en el botón "View"
+        view_button.click()
         time.sleep(2)
 
-        # Seleccionar los meses del año
-        month_selector = WebDriverWait(navegador, 10).until(
-            EC.presence_of_element_located((By.ID, "monthSelection"))
-        )
-        for i in range(1, 13):  # Meses de enero a diciembre
-            # Seleccionar el mes
+        # Seleccionar y recorrer los meses
+        for i in range(1, 3):  # Cambiar entre meses
+            # Localizar nuevamente el selector de mes
+            month_selector = WebDriverWait(navegador, 10).until(
+                EC.presence_of_element_located((By.ID, "monthSelection"))
+            )
             month_option = month_selector.find_element(By.XPATH, f"//option[@value='{i}']")
             month_option.click()
-            time.sleep(2)
 
-            # Reubicar y hacer clic en el botón "View" después de cada selección de mes
-            #CHECAR ESTA FUNCION QUE ESTA MAL
+            # Hacer clic en el botón "View"
+            view_button = WebDriverWait(navegador, 15).until(
+                EC.element_to_be_clickable((By.XPATH, "//input[@value='View' and @id='dateSubmit']"))
+            )
+            view_button.click()
 
-#            view_button = WebDriverWait(navegador, 15).until(
-#                EC.presence_of_element_located((By.XPATH, "//input[@value='View' and @id='dateSubmit']"))
-#           )
-#            view_button.click()
-#            time.sleep(2)
+            # Esperar a que la página se actualice
+            WebDriverWait(navegador, 15).until(EC.staleness_of(view_button))
+            WebDriverWait(navegador, 15).until(
+                EC.presence_of_element_located((By.CLASS_NAME, "calendar-day"))
+            )
 
-        # Obtener la página actual con BeautifulSoup después de recorrer todos los meses
-        soup = BeautifulSoup(navegador.page_source, 'html.parser')
+            # Obtener la página actual con BeautifulSoup
+            soup = BeautifulSoup(navegador.page_source, 'html.parser')
+            calendar_days = soup.find_all('li', class_='calendar-day')
 
-        # Buscar todos los días dentro del calendario
-        calendar_days = soup.find_all('li', class_='calendar-day')
+            for day in calendar_days:
+                try:
+                    # Extraer el día
+                    fecha_div = day.find('div', class_='date')
+                    dia = fecha_div.text.strip() if fecha_div else 'Desconocida'
 
-        for day in calendar_days:
-            try:
-                # Extraer la fecha
-                fecha = day.find('div', class_='header').text.strip()
+                    # Crear la fecha completa (por ejemplo: "1 de enero de 2023")
+                    fecha_completa = f"{dia} de {meses[str(i)]} de 2023"
 
-                # Extraer la temperatura máxima y mínima
-                temp_data = day.find('td', class_='temperature')
-                temp_max = temp_data.find('span', class_='hi').text.strip()
-                temp_min = temp_data.find('span', class_='low').text.strip()
+                    # Extraer la temperatura máxima y mínima
+                    temp_data = day.find('div', class_='temperature')
+                    temp_max = temp_data.find('span', class_='hi').text.strip() if temp_data and temp_data.find('span', 'hi') else 'Desconocida'
+                    temp_min = temp_data.find('span', class_='low').text.strip() if temp_data and temp_data.find('span', 'low') else 'Desconocida'
 
-                # Extraer la temperatura promedio
-                temp_prom = temp_data.find_next('td', class_='temperature').text.strip()
+                    # Extraer la condición climática
+                    condicion_div = day.find('div', class_='phrase')
+                    condicion = condicion_div.text.strip() if condicion_div else 'Desconocida'
 
-                # Extraer la precipitación
-                precip_data = day.find('td', class_='precipitation')
-                precipitacion = precip_data.find('span', class_='wu-value').text.strip() if precip_data else '0'
+                    # Guardar los datos en el CSV
+                    crear_csv(fecha_completa, temp_max, temp_min, condicion)
 
-                # Guardar los datos en el CSV
-                crear_csv(fecha, temp_max, temp_min, temp_prom, precipitacion)
+                except Exception as e:
+                    print(f"Error al extraer datos de un día: {e}")
 
-            except Exception as e:
-                print(f"Error al extraer datos de un día: {e}")
     except Exception as e:
         print(f"Se produjo un error: {e}")
 
     finally:
         navegador.quit()
 
-if __name__=="__main__":
+if __name__ == "__main__":
     clima()
