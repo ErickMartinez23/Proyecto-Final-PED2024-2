@@ -120,6 +120,51 @@ def clima():
                 except Exception as e:
                     print(f"Error al extraer datos de un día: {e}")
 
+        # Procesar ahora el año 2024
+        year_selector = WebDriverWait(navegador, 10).until(
+            EC.presence_of_element_located((By.ID, "yearSelection"))
+        )
+        year_2024_option = year_selector.find_element(By.XPATH, "//option[text()='2024']")
+        year_2024_option.click()
+        time.sleep(2)
+
+        for i in range(1, 13):  # Cambiar entre meses
+            # Seleccionar mes
+            month_selector = WebDriverWait(navegador, 10).until(
+                EC.presence_of_element_located((By.ID, "monthSelection"))
+            )
+            month_option = month_selector.find_element(By.XPATH, f"//option[@value='{i}']")
+            month_option.click()
+
+            # Hacer clic en "View"
+            view_button = WebDriverWait(navegador, 15).until(
+                EC.element_to_be_clickable((By.XPATH, "//input[@value='View' and @id='dateSubmit']"))
+            )
+            view_button.click()
+
+            # Esperar a que se cargue el calendario
+            WebDriverWait(navegador, 15).until(EC.staleness_of(view_button))
+            WebDriverWait(navegador, 15).until(
+                EC.presence_of_element_located((By.CLASS_NAME, "calendar-day"))
+            )
+
+            # Extraer datos del año 2024
+            soup = BeautifulSoup(navegador.page_source, 'html.parser')
+            calendar_days = soup.find_all('li', class_='calendar-day')
+            for day in calendar_days:
+                try:
+                    fecha_div = day.find('div', class_='date')
+                    dia = fecha_div.text.strip() if fecha_div else 'Desconocida'
+                    fecha_completa = f"{dia} de {meses[str(i)]} de 2024"
+                    temp_data = day.find('div', class_='temperature')
+                    temp_max = temp_data.find('span', class_='hi').text.strip() if temp_data and temp_data.find('span', 'hi') else 'Desconocida'
+                    temp_min = temp_data.find('span', class_='low').text.strip() if temp_data and temp_data.find('span', 'low') else 'Desconocida'
+                    condicion_div = day.find('div', class_='phrase')
+                    condicion = condicion_div.text.strip() if condicion_div else 'Desconocida'
+                    crear_csv(fecha_completa, temp_max, temp_min, condicion)
+                except Exception as e:
+                    print(f"Error al extraer datos de un día (2024): {e}")
+
     except Exception as e:
         print(f"Se produjo un error: {e}")
 
