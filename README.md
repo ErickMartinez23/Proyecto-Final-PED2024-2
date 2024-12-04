@@ -72,7 +72,7 @@ def clima():
         time.sleep(2)
 
         # Seleccionar y recorrer los meses
-        for i in range(1, 3):  # Cambiar entre meses
+        for i in range(1, 13):  # Cambiar entre meses
             # Localizar nuevamente el selector de mes
             month_selector = WebDriverWait(navegador, 10).until(
                 EC.presence_of_element_located((By.ID, "monthSelection"))
