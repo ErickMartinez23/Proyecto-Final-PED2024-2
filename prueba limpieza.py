@@ -54,6 +54,30 @@ def Transofrmar_temp(temp):
     except ValueError:
         logging.warning(f"No se pudo convertir la temperatura a entero: {temp}")
         return None
+def Ordenar_fechas_por_mes(data):
+    try:
+        data['Fecha'] = pd.to_datetime(data['Fecha'], errors='coerce')    
+        data = data.dropna(subset=['Fecha'])
+        data['Año'] = data['Fecha'].dt.year
+        data['Mes'] = data['Fecha'].dt.month
+        data = data.sort_values(by=['Año', 'Mes', 'Fecha'], ascending=[True, True, True])      
+        data = data.drop(columns=['Año', 'Mes'])
+        return data
+    except Exception as e:
+        logging.error(f"Error al ordenar las fechas por mes: {e}")
+        return data
+
+def Eliminar_fechas_duplicadas(data):
+
+    try:
+        rows_before = len(data)
+        data = data.drop_duplicates(subset=['Fecha'], keep='first')
+        rows_after = len(data)
+        logging.info(f"Filas eliminadas por fechas duplicadas: {rows_before - rows_after}")
+        return data
+    except Exception as e:
+        logging.error(f"Error al eliminar fechas duplicadas: {e}")
+        return data
 
 def Proceso(eliminar_desconocidos=True):
     try:
