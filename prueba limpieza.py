@@ -82,7 +82,7 @@ def Eliminar_fechas_duplicadas(data):
 def Proceso(eliminar_desconocidos=True):
     try:
         # Cargar el archivo CSV
-        input_file = 'archivos/clima_tijuana.csv'
+        input_file = 'datos_climaticos/clima_tijuana.csv'
         logging.info(f"Cargando archivo: {input_file}")
         data = pd.read_csv(input_file)
 
@@ -119,7 +119,7 @@ def Proceso(eliminar_desconocidos=True):
         logging.info(f"Filas duplicadas eliminadas: {rows_before - rows_after}")
 
         # Guardar el resultado limpio en un nuevo archivo
-        cleaned_file_path = 'archivos/clima_tijuana_limpio.csv'
+        cleaned_file_path = 'datos_climaticos/clima_tijuana_limpio.csv'
         data.to_csv(cleaned_file_path, index=False)
         logging.info(f"Archivo limpio guardado en: {cleaned_file_path}")
 
