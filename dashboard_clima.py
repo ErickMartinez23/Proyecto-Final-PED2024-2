@@ -6,7 +6,7 @@ from dash import dcc, html, Input, Output
 
 def dashboard_clima(app):
     # Leer los datos climáticos
-    data = pd.read_csv("archivos/clima_tijuana_limpio.csv", encoding="utf-8")
+    data = pd.read_csv("datos_climaticos/clima_tijuana_limpio.csv", encoding="utf-8")
 
     # Gráficos iniciales
     fig = px.line(data, x="Date", y=["Temperatura Máxima", "Temperatura Mínima"],
