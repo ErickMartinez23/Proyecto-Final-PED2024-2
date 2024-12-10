@@ -1,0 +1,81 @@
+import welome as w
+import dashboard_clima as d1
+import dash_bootstrap_components as dbc
+from dash import Input, Output, dcc, html, callback, Dash
+
+
+def menu():
+    SIDEBAR_STYLE = {
+        "position": "fixed",
+        "top": 0,
+        "left": 0,
+        "bottom": 0,
+        "width": "18rem",
+        "padding": "2rem 1rem",
+        "background-color": "#5c31ab",
+    }
+
+    # the styles for the main content position it to the right of the sidebar and
+    # add some padding.
+    CONTENT_STYLE = {
+        "margin-left": "18rem",
+        "margin-right": "3rem",
+        "padding": "2rem 1rem",
+    }
+
+    sidebar = html.Div(
+        [
+            html.H2("Dashboard", className="display-4"),
+            html.Hr(),
+            html.P(
+                "Objetivo; mostrar comparativa de datos ", className="lead"
+            ),
+            dbc.Nav(
+                [
+                    dbc.NavLink("Home", href="/", active="exact"),
+                    # href es donde va a ir y active mantiene el boton en color azul que indica que esta activo
+                    dbc.NavLink("dashboard 1", href="/dash-1", active="exact"),
+                    # se puede cambiar donde dice href que es a donde se dirije, si se cambia es necesario cambiar en el callback
+                    dbc.NavLink("dashboard 2", href="/dash-2", active="exact"),
+                    dbc.NavLink("dashboard 3", href="/dash-3", active="exact"),
+                    dbc.NavLink("github ", href="https://github.com/ErickMartinez23/Proyecto-Final-PED2024-2", active="exact", target="_blank"),
+                ],
+                vertical=True,
+                pills=True,
+            ),
+        ],
+        style=SIDEBAR_STYLE,
+    )
+
+    content = html.Div(id="page-content", style=CONTENT_STYLE)
+
+    return html.Div([dcc.Location(id="url"), sidebar, content])
+
+
+# the style arguments for the sidebar. We use position:fixed and a fixed width
+
+@callback(Output("page-content", "children"), [Input("url", "pathname")])
+def render_page_content(pathname):
+    if pathname == "/":
+        return w.welcome()
+    elif pathname == "/dash-1":
+        return d1.dashboard_clima(app)
+    elif pathname == "/dash-2":
+        return html.P("Oh cool, this is page 2!")
+    elif pathname == "/dash-3":
+        return html.P("Oh cool, this is page 3 siuu!")
+    # If the user tries to reach a different page, return a 404 message
+    return html.Div(
+        [
+            html.H1("404: Not found", className="text-danger"),
+            html.Hr(),
+            html.P(f"The pathname {pathname} was not recognised..."),
+        ],
+        className="p-3 bg-light rounded-3",
+    )
+
+
+if __name__ == "__main__":
+    app = Dash(external_stylesheets=[dbc.themes.VAPOR],suppress_callback_exceptions=True)
+    app.layout = menu()
+    app.run(debug=True)
