@@ -1,0 +1,53 @@
+import mysql.connector
+from mysql.connector import Error
+import csv
+
+try:
+    # Establecer la conexión
+    conexion = mysql.connector.connect(
+        host='localhost',
+        user='root',
+        password='weak',
+        database='ProyectoPED'
+    )
+
+    if conexion.is_connected():
+        print("Conexión exitosa a la base de datos")
+
+        # Crear un cursor
+        cursor = conexion.cursor()
+
+        # Leer datos del archivo CSV e insertarlos en la base de datos
+        with open('archivos/clima_tijuana_limpio.csv', 'r') as archivo_csv:
+            lector_csv = csv.reader(archivo_csv)
+            next(lector_csv)  # Saltar la primera fila si contiene encabezados
+
+            sql_insert = "INSERT INTO Clima_Tijuana (Fecha, Temperatura_Maxima,Temperatura_Minima,Condicion_Climatica) VALUES (%s, %s, %s, %s)"
+
+            for fila in lector_csv:
+                valores = (
+                    fila[0],
+                    fila[1],
+                    fila[2],
+                    fila[3])
+                cursor.execute(sql_insert, valores)
+
+        # Confirmar los cambios
+        conexion.commit()
+        print(f"{cursor.rowcount} registro(s) insertado(s).")
+
+        # Mostrar los datos insertados
+        cursor.execute("SELECT * FROM Clima_Tijuana")
+        resultados = cursor.fetchall()
+        for fila in resultados:
+            print(fila)
+
+except Error as e:
+    print(f"Error al conectar a la base de datos: {e}")
+
+finally:
+    # Cerrar cursor y conexión
+    if 'conexion' in locals() and conexion.is_connected():
+        cursor.close()
+        conexion.close()
+        print("Conexión cerrada")
